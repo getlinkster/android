@@ -1,6 +1,27 @@
 <resources>
     <string name="app_name">linkster</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_connections">Connections</string>
+    <string name="title_events">Events</string>
+    <string name="title_profile">Profile</string>
+
+    <string name="account_type">chain.link.linkster.android</string>
+    <string name="error">Something went wrong</string>
+    <string name="wallet_connect">WalletConnect</string>
+    <string name="generate_wallet">Generate wallet</string>
+    <string name="connect_wallet">Connect wallet</string>
+    <string name="no_wallet_apps">No wallet apps installed</string>
+    <string name="disconnect_wallet">Disconnect wallet</string>
+    <string name="copy_address">Copy address</string>
+
+    <!-- Conversations -->
+    <string name="conversation_footer">Signed in as %1$s on %2$s</string>
+    <string name="new_message">New message</string>
+    <string name="enter_address">Enter Ethereum address</string>
+    <string name="create_conversation">Create conversation</string>
+    <string name="empty_message">No messages yet</string>
+    <string name="your_message_body">You: %1$s</string>
+    <string name="xmtp_direct_message">XMTP Direct Message</string>
+
+    <!-- Messages -->
+    <string name="message_composer_hint">Type a message…</string>
 </resources>

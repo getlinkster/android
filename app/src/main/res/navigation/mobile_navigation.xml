@@ -3,23 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/navigation_home">
+    app:startDestination="@+id/navigation_events">
 
     <fragment
-        android:id="@+id/navigation_home"
-        android:name="chain.link.linkster.ui.home.HomeFragment"
-        android:label="@string/title_home"
-        tools:layout="@layout/fragment_home" />
+        android:id="@+id/navigation_events"
+        android:name="chain.link.linkster.ui.events.EventsFragment"
+        android:label="@string/title_events"
+        tools:layout="@layout/fragment_events" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="chain.link.linkster.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_connections"
+        android:name="chain.link.linkster.ui.connections.ConnectionsFragment"
+        android:label="@string/title_connections"
+        tools:layout="@layout/fragment_connections" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="chain.link.linkster.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_profile"
+        android:name="chain.link.linkster.ui.profile.ProfileFragment"
+        android:label="@string/title_profile"
+        tools:layout="@layout/fragment_profile" />
 </navigation>

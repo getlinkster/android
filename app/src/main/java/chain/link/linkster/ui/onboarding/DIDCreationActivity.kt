@@ -1,5 +1,7 @@
 package chain.link.linkster.ui.onboarding
 
+import android.accounts.Account
+import android.accounts.AccountManager
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -8,10 +10,12 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import androidx.lifecycle.ViewModelProvider
+import chain.link.linkster.ClientManager
 import chain.link.linkster.MainActivity
 import chain.link.linkster.R
 import org.xmtp.android.library.Client
 import org.xmtp.android.library.messages.PrivateKeyBuilder
+import org.xmtp.android.library.messages.PrivateKeyBundleV1Builder
 
 class DIDCreationActivity : AppCompatActivity() {
     private lateinit var viewModel: DIDCreationViewModel
@@ -63,9 +67,16 @@ class DIDCreationActivity : AppCompatActivity() {
 
     fun initializeXMTP() {
         viewModel.getPrivateKey(applicationContext) { privateKeyBytes ->
+
+            // generate wallet
             val xmtpPrivateKey = PrivateKeyBuilder.buildFromPrivateKeyData(privateKeyBytes)
-            val xmtpAccount = PrivateKeyBuilder(xmtpPrivateKey)
-            val client = Client().create(account = xmtpAccount)
+            val wallet = PrivateKeyBuilder(xmtpPrivateKey)
+            val client = Client().create(account = wallet)
+
+            val accountManager = AccountManager.get(this)
+            Account(wallet.address, resources.getString(R.string.account_type)).also { account ->
+                accountManager.addAccountExplicitly(account, PrivateKeyBundleV1Builder.encodeData(client.privateKeyBundleV1), null)
+            }
 
             val conversation = client.conversations.newConversation("0x3F11b27F323b62B159D2642964fa27C46C841897")
 
