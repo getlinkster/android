@@ -5,10 +5,13 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import androidx.lifecycle.ViewModelProvider
 import chain.link.linkster.MainActivity
 import chain.link.linkster.R
+import org.xmtp.android.library.Client
+import org.xmtp.android.library.messages.PrivateKeyBuilder
 
 class DIDCreationActivity : AppCompatActivity() {
     private lateinit var viewModel: DIDCreationViewModel
@@ -46,6 +49,30 @@ class DIDCreationActivity : AppCompatActivity() {
             if (isAuthenticated) {
                 navigateToMainFlow()
             }
+        }
+
+        findViewById<Button>(R.id.move_on).setOnClickListener {
+            navigateToMainFlow()
+        }
+
+        findViewById<Button>(R.id.connect).setOnClickListener {
+            initializeXMTP()
+        }
+
+    }
+
+    fun initializeXMTP() {
+        viewModel.getPrivateKey(applicationContext) { privateKeyBytes ->
+            val xmtpPrivateKey = PrivateKeyBuilder.buildFromPrivateKeyData(privateKeyBytes)
+            val xmtpAccount = PrivateKeyBuilder(xmtpPrivateKey)
+            val client = Client().create(account = xmtpAccount)
+
+            val conversation = client.conversations.newConversation("0x3F11b27F323b62B159D2642964fa27C46C841897")
+
+            // Load all messages in the conversation
+            conversation.send(text = "gm")
+            val messages = conversation.messages()
+            println("messages: $messages")
         }
     }
 
