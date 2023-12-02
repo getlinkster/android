@@ -28,30 +28,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_logout -> {
-                logoutUser()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun logoutUser() {
-        // Reset the shared preferences
-        val sharedPref = getSharedPreferences("AppPreferences", MODE_PRIVATE).edit()
-        sharedPref.putBoolean("OnboardingCompleted", false)
-        sharedPref.apply()
-
-        startOnboarding()
-    }
-
     private fun isOnboardingCompleted(): Boolean {
         // Retrieve the onboarding status from SharedPreferences
         val sharedPref = getSharedPreferences("AppPreferences", MODE_PRIVATE)
