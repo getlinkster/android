@@ -6,6 +6,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.Menu
@@ -22,17 +24,26 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import chain.link.linkster.ClientManager
+import chain.link.linkster.QRCodeResponse
 import chain.link.linkster.R
+import chain.link.linkster.RetrofitClient
 import chain.link.linkster.databinding.FragmentConnectionsBinding
 import chain.link.linkster.ui.conversation.ConversationDetailActivity
 import chain.link.linkster.ui.conversation.ConversationsAdapter
 import chain.link.linkster.ui.conversation.ConversationsClickListener
 import chain.link.linkster.ui.conversation.NewConversationBottomSheet
+import chain.link.linkster.ui.dialog.QRCodeDialogFragment
 import chain.link.linkster.ui.onboarding.QRCodeScannerActivity
 import chain.link.linkster.utils.KeyUtil
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.WriterException
+import com.google.zxing.qrcode.QRCodeWriter
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
+import retrofit2.Call
+import retrofit2.Response
 import org.xmtp.android.library.Conversation
+import retrofit2.Callback
 
 class ConnectionsFragment : Fragment(), ConversationsClickListener {
 
@@ -74,6 +85,10 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
 
         binding.fetchClaims.setOnClickListener {
             fetchClaims()
+        }
+
+        binding.showMyCode.setOnClickListener {
+            createAuthLinkQRCode("e5d3d537-edb1-4302-ab36-b72f9c0c154f", "e5d3d537-edb1-4302-ab36-b72f9c0c154f")
         }
 
         lifecycleScope.launch {
@@ -143,6 +158,13 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
         }
 
         requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
+    }
+
+    private fun showQRCodeDialog(qrCodeBitmap: Bitmap) {
+        val dialog = QRCodeDialogFragment().apply {
+            setQRCodeImage(qrCodeBitmap)
+        }
+        dialog.show(parentFragmentManager, "QRCodeDialog")
     }
 
     fun openScanQRCode() {
@@ -251,12 +273,55 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
         clipboard.setPrimaryClip(clip)
     }
 
+    private fun createAuthLinkQRCode(sessionID: String, linkID: String) {
+        RetrofitClient.instance.createAuthLinkQRCode(sessionID, linkID)
+            .enqueue(object : Callback<QRCodeResponse> {
+                override fun onResponse(call: Call<QRCodeResponse>, response: Response<QRCodeResponse>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { qrCodeResponse ->
+                            val qrCodeUrl = qrCodeResponse.qrCodeLink
+                            val qrCodeBitmap = generateQRCodeBitmap(qrCodeUrl)
+                            showQRCodeDialog(qrCodeBitmap)
+                        }
+                    } else {
+                        // Handle failure, possibly logging the error or showing a message
+                    }
+                }
+
+                override fun onFailure(call: Call<QRCodeResponse>, t: Throwable) {
+                    println("Error: $t.message")
+                    // Handle the error, such as network issues
+                }
+            })
+    }
+
     private fun openConversationDetail() {
         bottomSheet = NewConversationBottomSheet.newInstance()
         bottomSheet?.show(
             requireFragmentManager(),
             NewConversationBottomSheet.TAG
         )
+    }
+
+    private fun generateQRCodeBitmap(url: String): Bitmap {
+        val qrCodeWriter = QRCodeWriter()
+        val width = 300
+        val height = 300
+
+        return try {
+            val bitMatrix = qrCodeWriter.encode(url, BarcodeFormat.QR_CODE, width, height)
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+            bitmap
+        } catch (e: WriterException) {
+            // Handle exception
+            Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565) // return an empty bitmap on error
+        }
     }
 
     companion object {

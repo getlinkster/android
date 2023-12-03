@@ -12,7 +12,7 @@
         android:paddingTop="@dimen/padding"
         android:paddingStart="@dimen/padding"
         android:paddingEnd="@dimen/padding"
-        android:textColor="@android:color/black"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -27,6 +27,7 @@
         android:textSize="12sp"
         android:maxLines="1"
         android:ellipsize="end"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/peerAddress" />

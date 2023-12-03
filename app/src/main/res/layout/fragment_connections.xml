@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.connections.ConnectionsFragment">
+    tools:context=".ui.connections.ConnectionsFragment"
+    android:background="#141B27">
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/refresh"
@@ -44,6 +45,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/showMyCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show My Code"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/validateClaims"/>
 
     <Button
         android:id="@+id/validateClaims"

@@ -39,11 +39,6 @@ class ProfileFragment : Fragment() {
 
         accountManager = AccountManager.get(requireContext())
 
-        val textView: TextView = binding.textProfile
-        profileViewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
-        }
-
         binding.buttonLogout.setOnClickListener {
             logoutUser()
         }
