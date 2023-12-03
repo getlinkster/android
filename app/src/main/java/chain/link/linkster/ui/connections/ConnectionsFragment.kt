@@ -31,6 +31,7 @@ import chain.link.linkster.ui.conversation.NewConversationBottomSheet
 import chain.link.linkster.ui.onboarding.QRCodeScannerActivity
 import chain.link.linkster.utils.KeyUtil
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
 import org.xmtp.android.library.Conversation
 
 class ConnectionsFragment : Fragment(), ConversationsClickListener {
@@ -66,11 +67,8 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
                 viewModel.fetchConversations()
             }
         }
-        binding.fab.setOnClickListener {
-            openConversationDetail()
-        }
 
-        binding.fabFetch.setOnClickListener {
+        binding.validateClaims.setOnClickListener {
             openFetchScanQRCode()
         }
 
@@ -91,6 +89,32 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.stream.collect(::addStreamedItem)
+            }
+        }
+
+        viewModel.claimsLiveData.observe(viewLifecycleOwner) { claims ->
+            // Handle the fetched claims list here
+            claims.forEach { claim ->
+                println("Fetched Claim ID: ${claim.id}")
+
+                val credentialSubject = claim.info["credentialSubject"] as? JsonObject
+                if (credentialSubject != null) {
+                    val wallet = credentialSubject["wallet"]
+                    val name = credentialSubject["name"]
+
+                    // Use the 'wallet' and 'name' values as needed
+                    println("Wallet: $wallet")
+                    println("Name: $name")
+
+                    val input = wallet.toString().trim().replace("\"", "")
+                    val matcher = viewModel.ADDRESS_PATTERN.matcher(input)
+                    if (matcher.matches()) {
+                        viewModel.createConversation(input)
+                    }
+                } else {
+                    // Handle the case where 'credentialSubject' is not present or is of the wrong type
+                    println("credentialSubject not found or of the wrong type")
+                }
             }
         }
 
@@ -181,8 +205,8 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
         when (clientState) {
             is ClientManager.ClientState.Ready -> {
                 viewModel.fetchConversations()
-                binding.fab.visibility = View.VISIBLE
-                binding.fabFetch.visibility = View.VISIBLE
+//                binding.fab.visibility = View.VISIBLE
+//                binding.fabFetch.visibility = View.VISIBLE
             }
             is ClientManager.ClientState.Error -> showError(clientState.message)
             is ClientManager.ClientState.Unknown -> Unit

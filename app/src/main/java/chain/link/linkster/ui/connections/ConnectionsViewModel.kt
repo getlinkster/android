@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import chain.link.linkster.ClientManager
 import chain.link.linkster.extension.flowWhileShared
 import chain.link.linkster.extension.stateFlow
+import chain.link.linkster.ui.conversation.NewConversationViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,8 +30,11 @@ import org.xmtp.android.library.Conversation
 import org.xmtp.android.library.DecodedMessage
 import technology.polygon.polygonid_android_sdk.PolygonIdSdk
 import technology.polygon.polygonid_android_sdk.common.domain.entities.EnvEntity
+import technology.polygon.polygonid_android_sdk.common.domain.entities.FilterEntity
+import technology.polygon.polygonid_android_sdk.credential.domain.entities.ClaimEntity
 import technology.polygon.polygonid_android_sdk.iden3comm.domain.entities.Iden3MessageEntity
 import java.nio.charset.StandardCharsets
+import java.util.regex.Pattern
 
 const val TAG = "PolygonIdSdk"
 const val secret = "some secret table yep fff so GJ"
@@ -49,10 +53,12 @@ const val fetchUser2Message=
 
 class ConnectionsViewModel : ViewModel() {
 
+    val ADDRESS_PATTERN = Pattern.compile("^0x[a-fA-F0-9]{40}\$")
     private val _text = MutableLiveData<String>().apply {
         value = "This is connections Fragment"
     }
     val text: LiveData<String> = _text
+    val claimsLiveData: MutableLiveData<List<ClaimEntity>> = MutableLiveData()
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading(null))
     val uiState: StateFlow<UiState> = _uiState
@@ -74,37 +80,6 @@ class ConnectionsViewModel : ViewModel() {
             )
             PolygonIdSdk.getInstance().switchLog(context = context, true).thenAccept {
                 println("SwitchOnLog Done")
-            }
-        }
-    }
-    fun testFetch(context: Context) {
-        viewModelScope.launch {
-            PolygonIdSdk.getInstance().getIden3Message(
-                context, fetchUser2Message
-            ).thenApply { message ->
-                println("Message: $message")
-                PolygonIdSdk.getInstance().getPrivateKey(
-                    context = context, secret = secret
-                ).thenApply { privateKey ->
-                    PolygonIdSdk.getInstance().getDidIdentifier(
-                        context = context,
-                        privateKey = privateKey,
-                        blockchain = "polygon",
-                        network = "mumbai",
-                    ).thenApply { did ->
-                        PolygonIdSdk.getInstance().fetchAndSaveClaims(
-                            context = context,
-                            message = message as Iden3MessageEntity.OfferIden3MessageEntity,
-                            genesisDid = did,
-                            privateKey = privateKey
-                        ).thenAccept { claims ->
-                            println("Fetched: ${claims.first().id}")
-                        }.exceptionally {
-                            println("Error: $it")
-                            null
-                        }
-                    }
-                }
             }
         }
     }
@@ -181,6 +156,7 @@ class ConnectionsViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept { claims ->
                             println("Fetched: ${claims.first().id}")
+                            claimsLiveData.postValue(claims)
                         }.exceptionally {
                             println("Error: $it")
                             null
@@ -212,6 +188,8 @@ class ConnectionsViewModel : ViewModel() {
                     val filter =
                         FilterEntity.newBuilder().setOperator("nonEqual").setName("id")
                             .setValue(value).build()*/
+
+
                     PolygonIdSdk.getInstance().getClaims(
                         context = context,
                         genesisDid = did,
@@ -219,6 +197,7 @@ class ConnectionsViewModel : ViewModel() {
                         //filters = listOf(filter)
                     ).thenApply { claims ->
                         println("ClaimsFiltered: $claims")
+                        claimsLiveData.postValue(claims)
                     }
 
                 }
@@ -230,6 +209,19 @@ class ConnectionsViewModel : ViewModel() {
     fun setupPush() {
         viewModelScope.launch(Dispatchers.IO) {
 //            PushNotificationTokenManager.ensurePushTokenIsConfigured()
+        }
+    }
+
+    @UiThread
+    fun createConversation(address: String) {
+        _uiState.value = UiState.Loading(null)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                ClientManager.client.conversations.newConversation(address)
+                fetchConversations()
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.localizedMessage.orEmpty())
+            }
         }
     }
 
@@ -254,13 +246,13 @@ class ConnectionsViewModel : ViewModel() {
                         )
                     }
                 )
-                listItems.add(
-                    MainListItem.Footer(
-                        id = "footer",
-                        ClientManager.client.address,
-                        ClientManager.client.apiClient.environment.name
-                    )
-                )
+//                listItems.add(
+//                    MainListItem.Footer(
+//                        id = "footer",
+//                        ClientManager.client.address,
+//                        ClientManager.client.apiClient.environment.name
+//                    )
+//                )
                 _uiState.value = UiState.Success(listItems)
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.localizedMessage.orEmpty())

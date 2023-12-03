@@ -13,6 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import technology.polygon.polygonid_android_sdk.PolygonIdSdk
 import technology.polygon.polygonid_android_sdk.common.domain.entities.EnvEntity
+import technology.polygon.polygonid_android_sdk.credential.domain.entities.ClaimEntity
 import technology.polygon.polygonid_android_sdk.iden3comm.domain.entities.Iden3MessageEntity
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -33,6 +34,7 @@ class EventsViewModel : ViewModel() {
         value = "This is events Fragment"
     }
     val text: LiveData<String> = _text
+    val eventClaimsLiveData: MutableLiveData<List<ClaimEntity>> = MutableLiveData()
 
     fun init(context: Context) {
         val mumbai = EnvEntity(
@@ -51,37 +53,6 @@ class EventsViewModel : ViewModel() {
             )
             PolygonIdSdk.getInstance().switchLog(context = context, true).thenAccept {
                 println("SwitchOnLog Done")
-            }
-        }
-    }
-    fun testFetch(context: Context) {
-        viewModelScope.launch {
-            PolygonIdSdk.getInstance().getIden3Message(
-                context, fetchMessage
-            ).thenApply { message ->
-                println("Message: $message")
-                PolygonIdSdk.getInstance().getPrivateKey(
-                    context = context, secret = secret
-                ).thenApply { privateKey ->
-                    PolygonIdSdk.getInstance().getDidIdentifier(
-                        context = context,
-                        privateKey = privateKey,
-                        blockchain = "polygon",
-                        network = "mumbai",
-                    ).thenApply { did ->
-                        PolygonIdSdk.getInstance().fetchAndSaveClaims(
-                            context = context,
-                            message = message as Iden3MessageEntity.OfferIden3MessageEntity,
-                            genesisDid = did,
-                            privateKey = privateKey
-                        ).thenAccept { claims ->
-                            println("Fetched: ${claims.first().id}")
-                        }.exceptionally {
-                            println("Error: $it")
-                            null
-                        }
-                    }
-                }
             }
         }
     }
@@ -128,12 +99,22 @@ class EventsViewModel : ViewModel() {
     }
     fun fetch(context: Context, fetchMessage: String) {
         viewModelScope.launch {
+
+            var rawMessage = fetchMessage
+            if (fetchMessage.startsWith("iden3comm://?i_m")) {
+                rawMessage = getMessageFromBase64(fetchMessage)
+            }
+
+            if (fetchMessage.startsWith("iden3comm://?request_uri")) {
+                rawMessage = getMessageFromRemote(fetchMessage)
+            }
+
             PolygonIdSdk.getInstance().getIden3Message(
-                context, fetchMessage
+                context, rawMessage
             ).thenApply { message ->
                 println("Message: $message")
                 PolygonIdSdk.getInstance().getPrivateKey(
-                    context = context, secret = secret
+                    context = context, secret = chain.link.linkster.ui.events.secret
                 ).thenApply { privateKey ->
                     PolygonIdSdk.getInstance().getDidIdentifier(
                         context = context,
@@ -148,11 +129,50 @@ class EventsViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept { claims ->
                             println("Fetched: ${claims.first().id}")
+                            eventClaimsLiveData.postValue(claims)
                         }.exceptionally {
                             println("Error: $it")
                             null
                         }
                     }
+                }
+            }
+        }
+    }
+
+    fun getClaims(context: Context) {
+        viewModelScope.launch {
+            PolygonIdSdk.getInstance().getPrivateKey(
+                context = context, secret = chain.link.linkster.ui.connections.secret
+            ).thenApply { privateKey ->
+                PolygonIdSdk.getInstance().getDidIdentifier(
+                    context = context,
+                    privateKey = privateKey,
+                    blockchain = "polygon",
+                    network = "mumbai",
+                ).thenApply { did ->
+                    /*val id =
+                        "https://issuer-testing.polygonid.me/v1/did:polygonid:polygon:mumbai:2qFXmNqGWPrLqDowKz37Gq2FETk4yQwVUVUqeBLmf9/claims/2bcb98bc-e8db-11ed-938b-0242ac180006"
+                    val listValueBuilder = ListValue.newBuilder()
+                    listValueBuilder.addValues(
+                        Value.newBuilder().setStringValue(id).build()
+                    )
+                    val value = Value.newBuilder().setListValue(listValueBuilder).build()
+                    val filter =
+                        FilterEntity.newBuilder().setOperator("nonEqual").setName("id")
+                            .setValue(value).build()*/
+
+
+                    PolygonIdSdk.getInstance().getClaims(
+                        context = context,
+                        genesisDid = did,
+                        privateKey = privateKey,
+                        //filters = listOf(filter)
+                    ).thenApply { claims ->
+                        println("ClaimsFiltered: $claims")
+                        eventClaimsLiveData.postValue(claims)
+                    }
+
                 }
             }
         }

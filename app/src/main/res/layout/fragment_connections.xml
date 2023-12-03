@@ -23,18 +23,6 @@
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/padding"
-        android:contentDescription="@string/new_message"
-        android:src="@drawable/ic_add_24"
-        android:tint="@android:color/white"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabFetch"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -58,12 +46,22 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
+        android:id="@+id/validateClaims"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Validate"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/fetchClaims"/>
+
+    <Button
         android:id="@+id/fetchClaims"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Fetch Claims"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginBottom="100dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"/>
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

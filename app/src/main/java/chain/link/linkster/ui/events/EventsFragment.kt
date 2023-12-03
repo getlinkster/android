@@ -1,6 +1,7 @@
 package chain.link.linkster.ui.events
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,6 +10,8 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -22,11 +25,15 @@ import chain.link.linkster.ui.connections.ConnectionsViewModel
 import chain.link.linkster.ui.onboarding.DIDCreationActivity
 import chain.link.linkster.ui.onboarding.DIDCreationViewModel
 import chain.link.linkster.ui.onboarding.QRCodeScannerActivity
+import kotlinx.serialization.json.JsonObject
 
 class EventsFragment : Fragment() {
 
     private val viewModel: EventsViewModel by viewModels()
     private var _binding: FragmentEventsBinding? = null
+
+    private lateinit var listView: ListView
+    private lateinit var claimAdapter: CustomAdapter
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -42,9 +49,50 @@ class EventsFragment : Fragment() {
         _binding = FragmentEventsBinding.inflate(inflater, container, false)
         val root: View = binding.root
 
-        val textView: TextView = binding.textEvents
-        viewModel.text.observe(viewLifecycleOwner) {
-            textView.text = it
+        listView = binding.listView
+        claimAdapter = CustomAdapter(requireContext(), R.layout.list_item_claim)
+        listView.adapter = claimAdapter
+
+        binding.validateClaims.setOnClickListener {
+            openFetchScanQRCode()
+        }
+
+        binding.fetchClaims.setOnClickListener {
+            fetchClaims()
+        }
+
+        viewModel.eventClaimsLiveData.observe(viewLifecycleOwner) { claims ->
+            // Handle the fetched claims list here
+            claims.forEach { claim ->
+                println("Fetched Claim ID: ${claim.id}")
+
+                val credentialSubject = claim.info["credentialSubject"] as? JsonObject
+                if (credentialSubject != null) {
+                    val additionalInfo = credentialSubject["additional-info"].toString().trim().replace("\"", "")
+                    val eventDate = credentialSubject["event-date"].toString().trim().replace("\"", "")
+                    val eventLocation = credentialSubject["event-location"].toString().trim().replace("\"", "")
+                    val eventName = credentialSubject["event-name"].toString().trim().replace("\"", "")
+
+                    println("Additional Info: $additionalInfo")
+                    println("Event Date: $eventDate")
+                    println("Event Location: $eventLocation")
+                    println("Event Name: $eventName")
+
+                    if (eventName.isNotBlank() && eventName !== "null") {
+                        val claimData = ClaimData(
+                            claim.id,
+                            additionalInfo,
+                            eventDate,
+                            eventLocation,
+                            eventName
+                        )
+                        claimAdapter.add(claimData)
+                    }
+                } else {
+                    // Handle the case where 'credentialSubject' is not present or is of the wrong type
+                    println("credentialSubject not found or of the wrong type")
+                }
+            }
         }
 
         return root
@@ -63,8 +111,7 @@ class EventsFragment : Fragment() {
                 // Handle menu item selection
                 return when (menuItem.itemId) {
                     R.id.action_scan -> {
-                        viewModel.testFetch(requireContext())
-//                        openScanQRCode()
+                        openScanQRCode()
                         true
                     }
                     else -> false
@@ -80,9 +127,19 @@ class EventsFragment : Fragment() {
         startActivityForResult(intent, AUTHENTICATE_REQUEST_CODE)
     }
 
+    fun openFetchScanQRCode() {
+        val intent = Intent(requireContext(), QRCodeScannerActivity::class.java)
+        startActivityForResult(intent, ConnectionsFragment.FETCH_CREDENTIAL_REQUEST_CODE)
+    }
+
+    fun fetchClaims() {
+        viewModel.getClaims(requireContext())
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == FETCH_CREDENTIAL_REQUEST_CODE
+        if (requestCode == ConnectionsFragment.AUTHENTICATE_REQUEST_CODE
+            || requestCode == ConnectionsFragment.FETCH_CREDENTIAL_REQUEST_CODE
         ) {
             if (resultCode == Activity.RESULT_OK) {
                 val scanResult = data?.getStringExtra("SCAN_RESULT")
@@ -111,4 +168,33 @@ class EventsFragment : Fragment() {
         const val AUTHENTICATE_REQUEST_CODE = 0
         const val FETCH_CREDENTIAL_REQUEST_CODE = 1
     }
+
+    data class ClaimData(
+        val id: String,
+        val eventName: String,
+        val eventDate: String,
+        val eventLocation: String,
+        val additionalInfo: String
+    )
+    class CustomAdapter(context: Context, resource: Int) : ArrayAdapter<ClaimData>(context, resource) {
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+            val view = convertView ?: LayoutInflater.from(context).inflate(R.layout.list_item_claim, parent, false)
+
+            val claimData = getItem(position)
+
+            val eventNameTextView = view.findViewById<TextView>(R.id.event_name)
+            val eventDateTextView = view.findViewById<TextView>(R.id.event_date)
+            val eventLocationTextView = view.findViewById<TextView>(R.id.event_location)
+            val additionalInfoTextView = view.findViewById<TextView>(R.id.additional_info)
+
+            eventNameTextView.text = "Event Name: ${claimData?.eventName}"
+            eventDateTextView.text = "Event Date: ${claimData?.eventDate}"
+            eventLocationTextView.text = "Event Location: ${claimData?.eventLocation}"
+            additionalInfoTextView.text = "Additional Info: ${claimData?.additionalInfo}"
+
+            return view
+        }
+    }
 }
+
