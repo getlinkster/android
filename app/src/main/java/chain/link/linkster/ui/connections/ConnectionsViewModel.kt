@@ -151,8 +151,18 @@ class ConnectionsViewModel : ViewModel() {
 
     fun fetch(context: Context, fetchMessage: String) {
         viewModelScope.launch {
+
+            var rawMessage = fetchMessage
+            if (fetchMessage.startsWith("iden3comm://?i_m")) {
+                rawMessage = getMessageFromBase64(fetchMessage)
+            }
+
+            if (fetchMessage.startsWith("iden3comm://?request_uri")) {
+                rawMessage = getMessageFromRemote(fetchMessage)
+            }
+
             PolygonIdSdk.getInstance().getIden3Message(
-                context, fetchMessage
+                context, rawMessage
             ).thenApply { message ->
                 println("Message: $message")
                 PolygonIdSdk.getInstance().getPrivateKey(
@@ -176,6 +186,41 @@ class ConnectionsViewModel : ViewModel() {
                             null
                         }
                     }
+                }
+            }
+        }
+    }
+
+    fun getClaims(context: Context) {
+        viewModelScope.launch {
+            PolygonIdSdk.getInstance().getPrivateKey(
+                context = context, secret = secret
+            ).thenApply { privateKey ->
+                PolygonIdSdk.getInstance().getDidIdentifier(
+                    context = context,
+                    privateKey = privateKey,
+                    blockchain = "polygon",
+                    network = "mumbai",
+                ).thenApply { did ->
+                    /*val id =
+                        "https://issuer-testing.polygonid.me/v1/did:polygonid:polygon:mumbai:2qFXmNqGWPrLqDowKz37Gq2FETk4yQwVUVUqeBLmf9/claims/2bcb98bc-e8db-11ed-938b-0242ac180006"
+                    val listValueBuilder = ListValue.newBuilder()
+                    listValueBuilder.addValues(
+                        Value.newBuilder().setStringValue(id).build()
+                    )
+                    val value = Value.newBuilder().setListValue(listValueBuilder).build()
+                    val filter =
+                        FilterEntity.newBuilder().setOperator("nonEqual").setName("id")
+                            .setValue(value).build()*/
+                    PolygonIdSdk.getInstance().getClaims(
+                        context = context,
+                        genesisDid = did,
+                        privateKey = privateKey,
+                        //filters = listOf(filter)
+                    ).thenApply { claims ->
+                        println("ClaimsFiltered: $claims")
+                    }
+
                 }
             }
         }

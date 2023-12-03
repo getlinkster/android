@@ -70,6 +70,14 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
             openConversationDetail()
         }
 
+        binding.fabFetch.setOnClickListener {
+            openFetchScanQRCode()
+        }
+
+        binding.fetchClaims.setOnClickListener {
+            fetchClaims()
+        }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 ClientManager.clientState.collect(::ensureClientState)
@@ -116,6 +124,15 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
     fun openScanQRCode() {
         val intent = Intent(requireContext(), QRCodeScannerActivity::class.java)
         startActivityForResult(intent, AUTHENTICATE_REQUEST_CODE)
+    }
+
+    fun openFetchScanQRCode() {
+        val intent = Intent(requireContext(), QRCodeScannerActivity::class.java)
+        startActivityForResult(intent, FETCH_CREDENTIAL_REQUEST_CODE)
+    }
+
+    fun fetchClaims() {
+        viewModel.getClaims(requireContext())
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -165,6 +182,7 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
             is ClientManager.ClientState.Ready -> {
                 viewModel.fetchConversations()
                 binding.fab.visibility = View.VISIBLE
+                binding.fabFetch.visibility = View.VISIBLE
             }
             is ClientManager.ClientState.Error -> showError(clientState.message)
             is ClientManager.ClientState.Unknown -> Unit
