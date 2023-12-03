@@ -16,13 +16,16 @@
         android:theme="@style/Theme.Linkster"
         tools:targetApi="31">
         <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.onboarding.QRCodeScannerActivity"
             android:exported="false" />
         <activity
             android:name=".ui.onboarding.DIDCreationActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.splash.SplashActivity"
             android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
@@ -31,7 +34,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.conversation.ConversationDetailActivity"
             android:exported="false" />
@@ -42,6 +44,7 @@
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
+
             <meta-data
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />

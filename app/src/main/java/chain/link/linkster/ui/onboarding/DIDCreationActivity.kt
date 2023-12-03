@@ -74,9 +74,11 @@ class DIDCreationActivity : AppCompatActivity() {
             val client = Client().create(account = wallet)
 
             val accountManager = AccountManager.get(this)
+            println("wallet address: ${wallet.address}")
             Account(wallet.address, resources.getString(R.string.account_type)).also { account ->
                 accountManager.addAccountExplicitly(account, PrivateKeyBundleV1Builder.encodeData(client.privateKeyBundleV1), null)
             }
+
 
             val conversation = client.conversations.newConversation("0x3F11b27F323b62B159D2642964fa27C46C841897")
 
