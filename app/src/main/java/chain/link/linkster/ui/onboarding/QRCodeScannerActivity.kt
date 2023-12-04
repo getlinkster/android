@@ -2,8 +2,8 @@ package chain.link.linkster.ui.onboarding
 
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import chain.link.linkster.R
 import com.google.zxing.integration.android.IntentIntegrator
 
@@ -13,6 +13,13 @@ class QRCodeScannerActivity : AppCompatActivity() {
         setContentView(R.layout.activity_qr_scanner)
 
         val scanner = IntentIntegrator(this)
+
+        scanner.setPrompt("Scan QR Code")
+        scanner.setCameraId(0)
+        scanner.setOrientationLocked(true)
+        scanner.setBeepEnabled(true)
+        scanner.setDesiredBarcodeFormats(IntentIntegrator.QR_CODE)
+        scanner.captureActivity = CaptureActivityPortrait::class.java
         scanner.initiateScan()
     }
 
