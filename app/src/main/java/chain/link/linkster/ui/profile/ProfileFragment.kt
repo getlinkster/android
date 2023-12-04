@@ -6,11 +6,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import chain.link.linkster.ClientManager
 import chain.link.linkster.MainActivity
 import chain.link.linkster.R
@@ -19,8 +17,10 @@ import chain.link.linkster.ui.onboarding.DIDCreationActivity
 
 class ProfileFragment : Fragment() {
 
+    private val viewModel: ProfileViewModel by viewModels()
     private var _binding: FragmentProfileBinding? = null
     private lateinit var accountManager: AccountManager
+
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -31,8 +31,7 @@ class ProfileFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val profileViewModel =
-            ViewModelProvider(this)[ProfileViewModel::class.java]
+        viewModel.init(requireContext())
 
         _binding = FragmentProfileBinding.inflate(inflater, container, false)
         val root: View = binding.root
@@ -42,7 +41,23 @@ class ProfileFragment : Fragment() {
         binding.buttonLogout.setOnClickListener {
             logoutUser()
         }
+
+        viewModel.identities.observe(viewLifecycleOwner) { identities ->
+            val dids = identities.map { it.did } // Extract DIDs from identities
+            val joinedDids = dids.joinToString(separator = ", ") // Join DIDs with a separator
+
+            binding.identities.text = joinedDids // Set the joined DIDs to your UI element
+            println("Identities: $identities")
+        }
+
+
         return root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.getIdentities(requireContext())
     }
 
     override fun onDestroyView() {
@@ -60,6 +75,7 @@ class ProfileFragment : Fragment() {
         // Reset the shared preferences
         val sharedPref = requireContext().getSharedPreferences("AppPreferences", AppCompatActivity.MODE_PRIVATE).edit()
         sharedPref.putBoolean("OnboardingCompleted", false)
+        sharedPref
         sharedPref.apply()
 
         startOnboarding()

@@ -9,6 +9,13 @@
     android:gravity="center"
     android:background="#141B27">
 
+    <TextView
+        android:id="@+id/identities"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="50dp"
+        android:textColor="@color/white"/>
+
     <Button
         android:id="@+id/button_logout"
         android:layout_width="wrap_content"

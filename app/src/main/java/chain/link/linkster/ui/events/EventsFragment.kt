@@ -62,6 +62,8 @@ class EventsFragment : Fragment() {
         }
 
         viewModel.eventClaimsLiveData.observe(viewLifecycleOwner) { claims ->
+
+            claimAdapter.clear()
             // Handle the fetched claims list here
             claims.forEach { claim ->
                 println("Fetched Claim ID: ${claim.id}")
@@ -81,10 +83,10 @@ class EventsFragment : Fragment() {
                     if (eventName.isNotBlank() && eventName !== "null") {
                         val claimData = ClaimData(
                             claim.id,
-                            additionalInfo,
+                            eventName,
                             eventDate,
                             eventLocation,
-                            eventName
+                            additionalInfo
                         )
                         claimAdapter.add(claimData)
                     }

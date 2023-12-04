@@ -5,6 +5,7 @@ import android.util.Base64
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import chain.link.linkster.RandomStringManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -17,7 +18,6 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 
 const val TAG = "PolygonIdSdk"
-const val secret = "some secret table yep fff so GJ"
 const val apiKey = "1861e8a1291f423298faf6a50c9c0a6d"
 const val authMessage =
     "{\"id\":\"f6a69960-763f-48f5-a7e5-b3ea066cfbc7\",\"typ\":\"application/iden3comm-plain-json\",\"type\":\"https://iden3-communication.io/authorization/1.0/request\",\"thid\":\"f6a69960-763f-48f5-a7e5-b3ea066cfbc7\",\"body\":{\"callbackUrl\":\"https://self-hosted-demo-backend-platform.polygonid.me/api/callback?sessionId=98378\",\"reason\":\"test flow\",\"scope\":[]},\"from\":\"did:polygonid:polygon:mumbai:2qLhNLVmoQS7pQtpMeKHDqkTcENBZUj1nkZiRNPGgV\"}"
@@ -29,6 +29,7 @@ const val credentialRequestMessage =
 class DIDCreationViewModel : ViewModel() {
     val authenticationStatus = MutableLiveData<Boolean>()
     val profileStatus = MutableLiveData<Boolean>()
+    val secret = RandomStringManager.randomString
 
     fun init(context: Context) {
         val mumbai = EnvEntity(
