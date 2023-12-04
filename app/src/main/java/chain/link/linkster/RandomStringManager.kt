@@ -38,6 +38,7 @@ object RandomStringManager {
         }
 
         return String(charArray)
+//        return "some secret table nop fff so GJ"
     }
 
     private fun saveRandomString(randomString: String) {

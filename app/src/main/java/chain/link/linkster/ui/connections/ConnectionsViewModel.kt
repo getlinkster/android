@@ -53,7 +53,9 @@ const val fetchUser2Message=
 
 class ConnectionsViewModel : ViewModel() {
 
-    val authenticationStatus = MutableLiveData<Boolean>()
+    private val _authenticationStatus = MutableLiveData<Boolean>()
+    val authenticationStatus: LiveData<Boolean> = _authenticationStatus
+
     val fetchStatus = MutableLiveData<Boolean>()
 
     val ADDRESS_PATTERN = Pattern.compile("^0x[a-fA-F0-9]{40}\$")
@@ -118,10 +120,10 @@ class ConnectionsViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept {
                             println("Authenticated")
-                            authenticationStatus.postValue(true)
+                            updateAuthenticationStatus(true)
                         }.exceptionally {
                             println("Authentication Error: $it")
-                            authenticationStatus.postValue(false)
+                            updateAuthenticationStatus(false)
                             null
                         }
                     }
@@ -346,5 +348,9 @@ class ConnectionsViewModel : ViewModel() {
         } catch (error: Exception) {
             throw Exception("Error while getting the message from the base64", error)
         }
+    }
+
+    fun updateAuthenticationStatus(isAuthenticated: Boolean) {
+        _authenticationStatus.value = isAuthenticated
     }
 }

@@ -30,7 +30,9 @@ const val credentialRequestMessage =
 
 class EventsViewModel : ViewModel() {
 
-    val authenticationStatus = MutableLiveData<Boolean>()
+    private val _authenticationStatus = MutableLiveData<Boolean>()
+    val authenticationStatus: LiveData<Boolean> = _authenticationStatus
+
     val fetchStatus = MutableLiveData<Boolean>()
 
     private val _text = MutableLiveData<String>().apply {
@@ -92,10 +94,10 @@ class EventsViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept {
                             println("Authenticated")
-                            authenticationStatus.postValue(true)
+                            updateAuthenticationStatus(true)
                         }.exceptionally {
                             println("Authentication Error: $it")
-                            authenticationStatus.postValue(false)
+                            updateAuthenticationStatus(false)
                             null
                         }
                     }
@@ -134,9 +136,16 @@ class EventsViewModel : ViewModel() {
                             genesisDid = did,
                             privateKey = privateKey
                         ).thenAccept { claims ->
-                            println("Fetched: ${claims.first().id}")
-                            eventClaimsLiveData.postValue(claims)
-                            fetchStatus.postValue(true)
+                            PolygonIdSdk.getInstance().getClaims(
+                                context = context,
+                                genesisDid = did,
+                                privateKey = privateKey,
+                                //filters = listOf(filter)
+                            ).thenApply { claims ->
+                                println("Fetched: ${claims.first().id}")
+                                eventClaimsLiveData.postValue(claims)
+                                fetchStatus.postValue(true)
+                            }
                         }.exceptionally {
                             println("Error: $it")
                             fetchStatus.postValue(false)
@@ -215,6 +224,9 @@ class EventsViewModel : ViewModel() {
         }
     }
 
+    fun updateAuthenticationStatus(isAuthenticated: Boolean) {
+        _authenticationStatus.value = isAuthenticated
+    }
 
 
 }

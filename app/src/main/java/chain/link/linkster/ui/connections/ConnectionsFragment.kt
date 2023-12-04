@@ -134,7 +134,7 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
             }
         }
 
-        viewModel.authenticationStatus.observe(requireActivity()) { isAuthenticated ->
+        viewModel.authenticationStatus.observe(viewLifecycleOwner) { isAuthenticated ->
             binding.progress.visibility = View.GONE
             if (isAuthenticated) {
                 AlertDialog.Builder(requireContext())
