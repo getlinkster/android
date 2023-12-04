@@ -1,14 +1,20 @@
 package chain.link.linkster.ui.onboarding
 
 import android.content.Context
+import android.util.Base64
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import technology.polygon.polygonid_android_sdk.PolygonIdSdk
 import technology.polygon.polygonid_android_sdk.common.domain.entities.EnvEntity
 import technology.polygon.polygonid_android_sdk.iden3comm.domain.entities.Iden3MessageEntity
 import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 
 const val TAG = "PolygonIdSdk"
 const val secret = "some secret table yep fff so GJ"
@@ -22,6 +28,7 @@ const val credentialRequestMessage =
 
 class DIDCreationViewModel : ViewModel() {
     val authenticationStatus = MutableLiveData<Boolean>()
+    val profileStatus = MutableLiveData<Boolean>()
 
     fun init(context: Context) {
         val mumbai = EnvEntity(
@@ -47,6 +54,7 @@ class DIDCreationViewModel : ViewModel() {
     //// IDENTITY
     fun addIdentity(context: Context) {
         viewModelScope.launch {
+            profileStatus.postValue(true)
             PolygonIdSdk.getInstance().addIdentity(
                 context = context, secret = secret
             ).thenApply { identity ->
@@ -58,7 +66,10 @@ class DIDCreationViewModel : ViewModel() {
                     privateKey = identity.privateKey,
                     profileNonce = BigInteger("3000")
                 ).thenApply {
+                    profileStatus.postValue(true)
                     println("Profile added")
+                }.exceptionally { throwable ->
+                    println("ErrorAddIdentityValidity: $throwable")
                 }
             }
         }
@@ -190,8 +201,18 @@ class DIDCreationViewModel : ViewModel() {
 
     fun authenticate(context: Context, authMessage: String) {
         viewModelScope.launch {
+
+            var rawMessage = authMessage
+            if (authMessage.startsWith("iden3comm://?i_m")) {
+                rawMessage = getMessageFromBase64(authMessage)
+            }
+
+            if (authMessage.startsWith("iden3comm://?request_uri")) {
+                rawMessage = getMessageFromRemote(authMessage)
+            }
+
             PolygonIdSdk.getInstance().getIden3Message(
-                context, authMessage
+                context, rawMessage
             ).thenApply { message ->
                 PolygonIdSdk.getInstance().getPrivateKey(
                     context = context, secret = secret
@@ -209,10 +230,8 @@ class DIDCreationViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept {
                             println("Authenticated")
-                            authenticationStatus.postValue(true)
                         }.exceptionally {
                             println("Authentication Error: $it")
-                            authenticationStatus.postValue(false)
                             null
                         }
                     }
@@ -223,8 +242,18 @@ class DIDCreationViewModel : ViewModel() {
 
     fun fetch(context: Context, fetchMessage: String) {
         viewModelScope.launch {
+
+            var rawMessage = fetchMessage
+            if (fetchMessage.startsWith("iden3comm://?i_m")) {
+                rawMessage = getMessageFromBase64(fetchMessage)
+            }
+
+            if (fetchMessage.startsWith("iden3comm://?request_uri")) {
+                rawMessage = getMessageFromRemote(fetchMessage)
+            }
+
             PolygonIdSdk.getInstance().getIden3Message(
-                context, fetchMessage
+                context, rawMessage
             ).thenApply { message ->
                 println("Message: $message")
                 PolygonIdSdk.getInstance().getPrivateKey(
@@ -243,8 +272,10 @@ class DIDCreationViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept { claims ->
                             println("Fetched: ${claims.first().id}")
+                            authenticationStatus.postValue(true)
                         }.exceptionally {
                             println("Error: $it")
+                            authenticationStatus.postValue(false)
                             null
                         }
                     }
@@ -381,6 +412,35 @@ class DIDCreationViewModel : ViewModel() {
             data[i / 2] = ((Character.digit(hexString[i], 16) shl 4) + Character.digit(hexString[i + 1], 16)).toByte()
         }
         return data
+    }
+
+    private suspend fun getMessageFromRemote(message: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val url = message.replace("iden3comm://?request_uri=", "")
+                val client = OkHttpClient()
+                val request = Request.Builder().url(url).build()
+                val response = client.newCall(request).execute()
+
+                if (!response.isSuccessful) {
+                    throw Exception("Error while getting the message from the remote")
+                }
+
+                response.body?.string() ?: throw Exception("No response body")
+            } catch (error: Exception) {
+                throw Exception("Error while getting the message from the remote", error)
+            }
+        }
+    }
+
+    private fun getMessageFromBase64(message: String): String {
+        return try {
+            val base64Message = message.replace("iden3comm://?i_m=", "")
+            val decodedBytes = Base64.decode(base64Message, Base64.DEFAULT)
+            String(decodedBytes, StandardCharsets.UTF_8)
+        } catch (error: Exception) {
+            throw Exception("Error while getting the message from the base64", error)
+        }
     }
 
 

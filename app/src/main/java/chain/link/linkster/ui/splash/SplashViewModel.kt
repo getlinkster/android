@@ -53,9 +53,15 @@ class SplashViewModel : ViewModel() {
             PolygonIdSdk.getInstance().isAlreadyDownloadedCircuitsFromServer(context)
                 .thenApply { isDownloaded ->
                     _uiState.update { currentState ->
-                        currentState.copy(isDownloaded = isDownloaded)
+                        currentState.copy(isDownloaded = true)
                     }
                 }
+        }
+    }
+
+    fun markAsDownloaded(context: Context) {
+        _uiState.update { currentState ->
+            currentState.copy(isDownloaded = true)
         }
     }
 

@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
+import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
 import chain.link.linkster.ClientManager
 import chain.link.linkster.MainActivity
@@ -45,18 +46,16 @@ class DIDCreationActivity : AppCompatActivity() {
             startActivityForResult(intent, FETCH_CREDENTIAL_REQUEST_CODE)
         }
 
-        findViewById<Button>(R.id.move_on).setOnClickListener {
-            navigateToMainFlow()
-        }
-
         viewModel.authenticationStatus.observe(this) { isAuthenticated ->
             if (isAuthenticated) {
                 navigateToMainFlow()
             }
         }
 
-        findViewById<Button>(R.id.move_on).setOnClickListener {
-            navigateToMainFlow()
+        viewModel.profileStatus.observe(this) { isProfileCreated ->
+            if (isProfileCreated) {
+                findViewById<TextView>(R.id.profileText).text = "Profile created"
+            }
         }
 
         findViewById<Button>(R.id.connect).setOnClickListener {
@@ -86,6 +85,8 @@ class DIDCreationActivity : AppCompatActivity() {
             conversation.send(text = "gm")
             val messages = conversation.messages()
             println("messages: $messages")
+
+            navigateToMainFlow()
         }
     }
 

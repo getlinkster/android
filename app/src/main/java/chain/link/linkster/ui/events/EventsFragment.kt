@@ -120,6 +120,7 @@ class EventsFragment : Fragment() {
         }
 
         requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        fetchClaims()
     }
 
     fun openScanQRCode() {
