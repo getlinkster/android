@@ -1,5 +1,6 @@
 package chain.link.linkster.ui.profile
 
+import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.Intent
 import android.graphics.Bitmap
@@ -27,6 +28,9 @@ import chain.link.linkster.ui.onboarding.DIDCreationActivity
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import org.xmtp.android.library.Client
+import org.xmtp.android.library.messages.PrivateKeyBuilder
+import org.xmtp.android.library.messages.PrivateKeyBundleV1Builder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -70,7 +74,7 @@ class ProfileFragment : Fragment() {
             val dids = identities.map { it.did } // Extract DIDs from identities
             val joinedDids = dids.joinToString(separator = ", ") // Join DIDs with a separator
 
-            binding.identities.text = joinedDids // Set the joined DIDs to your UI element
+            binding.identities.text = "DID addresses: $joinedDids"
             println("Identities: $identities")
         }
 
@@ -83,11 +87,20 @@ class ProfileFragment : Fragment() {
 
         viewModel.getIdentities(requireContext())
         fetchSchemas()
+        walletDetails()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    fun walletDetails(){
+        viewModel.getPrivateKey(requireContext()) { privateKeyBytes ->
+            val privateKey = PrivateKeyBuilder.buildFromPrivateKeyData(privateKeyBytes)
+            val wallet = PrivateKeyBuilder(privateKey)
+            binding.walletAddress.text = "Wallet Address: ${wallet.address}"
+        }
     }
 
     private fun fetchSchemas() {

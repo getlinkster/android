@@ -56,4 +56,23 @@ class ProfileViewModel : ViewModel() {
             }
         }
     }
+
+    fun getPrivateKey(context: Context, completion: (ByteArray) -> Unit) {
+        viewModelScope.launch {
+            PolygonIdSdk.getInstance().getPrivateKey(context = context, secret = secret)
+                .thenApply { privateKeyString ->
+                    val privateKeyBytes = hexStringToByteArray(privateKeyString)
+                    completion(privateKeyBytes)
+                }
+        }
+    }
+
+    fun hexStringToByteArray(hexString: String): ByteArray {
+        val len = hexString.length
+        val data = ByteArray(len / 2)
+        for (i in 0 until len step 2) {
+            data[i / 2] = ((Character.digit(hexString[i], 16) shl 4) + Character.digit(hexString[i + 1], 16)).toByte()
+        }
+        return data
+    }
 }
