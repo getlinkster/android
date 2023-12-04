@@ -20,7 +20,7 @@ object RetrofitClient {
 
     val instance: ApiService by lazy {
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://139.59.209.223/")
+            .baseUrl("http://104.248.41.194/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()
