@@ -2,6 +2,8 @@ package chain.link.linkster.ui.profile
 
 import android.accounts.AccountManager
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,9 +13,18 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import chain.link.linkster.ClientManager
 import chain.link.linkster.MainActivity
+import chain.link.linkster.QRCodeResponse
 import chain.link.linkster.R
+import chain.link.linkster.RetrofitClient
 import chain.link.linkster.databinding.FragmentProfileBinding
+import chain.link.linkster.ui.dialog.QRCodeDialogFragment
 import chain.link.linkster.ui.onboarding.DIDCreationActivity
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.WriterException
+import com.google.zxing.qrcode.QRCodeWriter
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class ProfileFragment : Fragment() {
 
@@ -37,6 +48,10 @@ class ProfileFragment : Fragment() {
         val root: View = binding.root
 
         accountManager = AccountManager.get(requireContext())
+
+        binding.showMyCode.setOnClickListener {
+            createAuthLinkQRCode("e5d3d537-edb1-4302-ab36-b72f9c0c154f", "e5d3d537-edb1-4302-ab36-b72f9c0c154f")
+        }
 
         binding.buttonLogout.setOnClickListener {
             logoutUser()
@@ -63,6 +78,56 @@ class ProfileFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun showQRCodeDialog(qrCodeBitmap: Bitmap) {
+        val dialog = QRCodeDialogFragment().apply {
+            setQRCodeImage(qrCodeBitmap)
+        }
+        dialog.show(parentFragmentManager, "QRCodeDialog")
+    }
+
+    private fun createAuthLinkQRCode(sessionID: String, linkID: String) {
+        RetrofitClient.instance.createAuthLinkQRCode(sessionID, linkID)
+            .enqueue(object : Callback<QRCodeResponse> {
+                override fun onResponse(call: Call<QRCodeResponse>, response: Response<QRCodeResponse>) {
+                    if (response.isSuccessful) {
+                        response.body()?.let { qrCodeResponse ->
+                            val qrCodeUrl = qrCodeResponse.qrCodeLink
+                            val qrCodeBitmap = generateQRCodeBitmap(qrCodeUrl)
+                            showQRCodeDialog(qrCodeBitmap)
+                        }
+                    } else {
+                        // Handle failure, possibly logging the error or showing a message
+                    }
+                }
+
+                override fun onFailure(call: Call<QRCodeResponse>, t: Throwable) {
+                    println("Error: $t.message")
+                    // Handle the error, such as network issues
+                }
+            })
+    }
+
+    private fun generateQRCodeBitmap(url: String): Bitmap {
+        val qrCodeWriter = QRCodeWriter()
+        val width = 300
+        val height = 300
+
+        return try {
+            val bitMatrix = qrCodeWriter.encode(url, BarcodeFormat.QR_CODE, width, height)
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+
+            for (x in 0 until width) {
+                for (y in 0 until height) {
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) Color.BLACK else Color.WHITE)
+                }
+            }
+            bitmap
+        } catch (e: WriterException) {
+            // Handle exception
+            Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565) // return an empty bitmap on error
+        }
     }
 
     private fun logoutUser() {

@@ -30,6 +30,9 @@ const val credentialRequestMessage =
 
 class EventsViewModel : ViewModel() {
 
+    val authenticationStatus = MutableLiveData<Boolean>()
+    val fetchStatus = MutableLiveData<Boolean>()
+
     private val _text = MutableLiveData<String>().apply {
         value = "This is events Fragment"
     }
@@ -89,8 +92,10 @@ class EventsViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept {
                             println("Authenticated")
+                            authenticationStatus.postValue(true)
                         }.exceptionally {
                             println("Authentication Error: $it")
+                            authenticationStatus.postValue(false)
                             null
                         }
                     }
@@ -131,8 +136,10 @@ class EventsViewModel : ViewModel() {
                         ).thenAccept { claims ->
                             println("Fetched: ${claims.first().id}")
                             eventClaimsLiveData.postValue(claims)
+                            fetchStatus.postValue(true)
                         }.exceptionally {
                             println("Error: $it")
+                            fetchStatus.postValue(false)
                             null
                         }
                     }

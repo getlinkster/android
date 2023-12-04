@@ -1,6 +1,7 @@
 package chain.link.linkster.ui.events
 
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -13,11 +14,13 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import chain.link.linkster.ClientManager
 import chain.link.linkster.R
 import chain.link.linkster.databinding.FragmentEventsBinding
 import chain.link.linkster.ui.connections.ConnectionsFragment
@@ -61,6 +64,43 @@ class EventsFragment : Fragment() {
             fetchClaims()
         }
 
+        binding.refresh.setOnRefreshListener {
+            fetchClaims()
+        }
+
+        viewModel.authenticationStatus.observe(requireActivity()) { isAuthenticated ->
+            binding.progress.visibility = View.GONE
+            if (isAuthenticated) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Authentication Successful")
+                    .setMessage("Do you want to add this credential to your wallet?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        openFetchScanQRCode()
+                    }
+                    .setNegativeButton("No") { _, _ ->
+                        // User clicked "No," do nothing or handle accordingly
+                    }
+                    .create()
+                    .show()
+            } else {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Authentication Unsuccessful")
+                    .setMessage("Do you want to try again?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        openScanQRCode()
+                    }
+                    .setNegativeButton("No") { _, _ ->
+                        // User clicked "No," do nothing or handle accordingly
+                    }
+                    .create()
+                    .show()
+            }
+        }
+
+        viewModel.fetchStatus.observe(requireActivity()) { isFetched ->
+            binding.progress.visibility = View.GONE
+        }
+
         viewModel.eventClaimsLiveData.observe(viewLifecycleOwner) { claims ->
 
             claimAdapter.clear()
@@ -95,6 +135,8 @@ class EventsFragment : Fragment() {
                     println("credentialSubject not found or of the wrong type")
                 }
             }
+            binding.refresh.isRefreshing = false
+            binding.progress.visibility = View.GONE
         }
 
         return root
@@ -136,6 +178,7 @@ class EventsFragment : Fragment() {
     }
 
     fun fetchClaims() {
+        binding.progress.visibility = View.VISIBLE
         viewModel.getClaims(requireContext())
     }
 
@@ -149,10 +192,12 @@ class EventsFragment : Fragment() {
                 when (requestCode) {
 
                     ConnectionsFragment.AUTHENTICATE_REQUEST_CODE -> {
+                        binding.progress.visibility = View.VISIBLE
                         viewModel.authenticate(requireContext(), scanResult ?: "")
                     }
 
                     FETCH_CREDENTIAL_REQUEST_CODE -> {
+                        binding.progress.visibility = View.VISIBLE
                         viewModel.fetch(requireContext(), scanResult ?: "")
                     }
                 }

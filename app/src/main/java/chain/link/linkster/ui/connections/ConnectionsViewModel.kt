@@ -53,6 +53,9 @@ const val fetchUser2Message=
 
 class ConnectionsViewModel : ViewModel() {
 
+    val authenticationStatus = MutableLiveData<Boolean>()
+    val fetchStatus = MutableLiveData<Boolean>()
+
     val ADDRESS_PATTERN = Pattern.compile("^0x[a-fA-F0-9]{40}\$")
     private val _text = MutableLiveData<String>().apply {
         value = "This is connections Fragment"
@@ -115,8 +118,10 @@ class ConnectionsViewModel : ViewModel() {
                             privateKey = privateKey
                         ).thenAccept {
                             println("Authenticated")
+                            authenticationStatus.postValue(true)
                         }.exceptionally {
                             println("Authentication Error: $it")
+                            authenticationStatus.postValue(false)
                             null
                         }
                     }
@@ -158,8 +163,10 @@ class ConnectionsViewModel : ViewModel() {
                         ).thenAccept { claims ->
                             println("Fetched: ${claims.first().id}")
                             claimsLiveData.postValue(claims)
+                            fetchStatus.postValue(true)
                         }.exceptionally {
                             println("Error: $it")
+                            fetchStatus.postValue(false)
                             null
                         }
                     }

@@ -16,6 +16,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -130,6 +131,35 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
                     // Handle the case where 'credentialSubject' is not present or is of the wrong type
                     println("credentialSubject not found or of the wrong type")
                 }
+            }
+        }
+
+        viewModel.authenticationStatus.observe(requireActivity()) { isAuthenticated ->
+            binding.progress.visibility = View.GONE
+            if (isAuthenticated) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Authentication Successful")
+                    .setMessage("Do you want to add this credential to your wallet?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        openFetchScanQRCode()
+                    }
+                    .setNegativeButton("No") { _, _ ->
+                        // User clicked "No," do nothing or handle accordingly
+                    }
+                    .create()
+                    .show()
+            } else {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Authentication Unsuccessful")
+                    .setMessage("Do you want to try again?")
+                    .setPositiveButton("Yes") { _, _ ->
+                        openScanQRCode()
+                    }
+                    .setNegativeButton("No") { _, _ ->
+                        // User clicked "No," do nothing or handle accordingly
+                    }
+                    .create()
+                    .show()
             }
         }
 
