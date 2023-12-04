@@ -4,6 +4,7 @@ import android.accounts.Account
 import android.accounts.AccountManager
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -29,6 +30,7 @@ import chain.link.linkster.ui.onboarding.DIDCreationActivity
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import okhttp3.ResponseBody
 import org.xmtp.android.library.Client
 import org.xmtp.android.library.messages.PrivateKeyBuilder
 import org.xmtp.android.library.messages.PrivateKeyBundleV1Builder
@@ -43,6 +45,7 @@ class ProfileFragment : Fragment() {
     private lateinit var accountManager: AccountManager
     private val schemaList = mutableListOf<SchemaResponse>()
     private var profileCredentialId: String = ""
+    private lateinit var profileBitmap: Bitmap
 
 
     // This property is only valid between onCreateView and
@@ -61,17 +64,18 @@ class ProfileFragment : Fragment() {
 
         accountManager = AccountManager.get(requireContext())
 
-        binding.showMyCode.setOnClickListener {
-            getQRCodeForCredential(profileCredentialId)
-        }
+//        binding.showMyCode.setOnClickListener {
+//            getQRCodeForCredential(profileCredentialId)
+//        }
 
         binding.buttonLogout.setOnClickListener {
             logoutUser()
         }
 
-        binding.createProfile.setOnClickListener { createProfile() }
+        binding.qrCodeImageView.setOnClickListener { showQRCodeDialog(profileBitmap) }
 
-        binding.createCredential.setOnClickListener { createUserCredential() }
+//        binding.createProfile.setOnClickListener { createProfile() }
+//        binding.createCredential.setOnClickListener { createUserCredential() }
 
         viewModel.identities.observe(viewLifecycleOwner) { identities ->
             val dids = identities.map { it.did } // Extract DIDs from identities
@@ -80,7 +84,6 @@ class ProfileFragment : Fragment() {
             binding.identities.text = "DID addresses: $joinedDids"
             println("Identities: $identities")
         }
-
 
         return root
     }
@@ -103,6 +106,7 @@ class ProfileFragment : Fragment() {
             val privateKey = PrivateKeyBuilder.buildFromPrivateKeyData(privateKeyBytes)
             val wallet = PrivateKeyBuilder(privateKey)
             binding.walletAddress.text = "Wallet Address: ${wallet.address}"
+            createProfile(wallet.address)
         }
     }
 
@@ -134,22 +138,23 @@ class ProfileFragment : Fragment() {
         })
     }
 
-    private fun createProfile() {
+    private fun createProfile(wallet: String) {
         val profileData = CreateProfileRequest(
             name = "Beff Jezos",
-            wallet = "0x12312312312312123123",
+            wallet = wallet,
             profession = "CEO",
             company = "Amazon",
             telegram = "beffy"
         )
 
-        RetrofitClient.instance.createProfile(profileData).enqueue(object : Callback<QRCodeResponse> {
-            override fun onResponse(call: Call<QRCodeResponse>, response: Response<QRCodeResponse>) {
+        RetrofitClient.instance.createProfile(profileData).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.isSuccessful) {
-                    val qrCodeUrl = response.body()?.qrCodeLink
-                    if (qrCodeUrl != null) {
-                        val qrCodeBitmap = generateQRCodeBitmap(qrCodeUrl)
-                        showQRCodeDialog(qrCodeBitmap)
+                    val responseBody = response.body()
+                    if (responseBody != null) {
+                        val bitmap = BitmapFactory.decodeStream(responseBody.byteStream()) as Bitmap
+                        binding.qrCodeImageView.setImageBitmap(bitmap)
+                        profileBitmap = bitmap
                     } else {
                         // Handle the case where the response does not contain a profile ID
                     }
@@ -158,7 +163,7 @@ class ProfileFragment : Fragment() {
                 }
             }
 
-            override fun onFailure(call: Call<QRCodeResponse>, t: Throwable) {
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 println("Error: ${t.message}")
                 // Handle the error, such as network issues
             }

@@ -2,6 +2,7 @@ package chain.link.linkster
 
 
 import com.google.gson.annotations.SerializedName
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -38,13 +39,13 @@ interface ApiService {
     @Headers("accept: application/json")
     fun createProfile(
         @Body request: CreateProfileRequest
-    ): Call<QRCodeResponse>
+    ): Call<ResponseBody>
 
     @POST("/api/v1/create/event")
     @Headers("accept: application/json")
     fun createEvent(
         @Body request: CreateEventRequest
-    ): Call<QRCodeResponse>
+    ): Call<ResponseBody>
 
 }
 
