@@ -1,34 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.profile.ProfileFragment"
-    android:orientation="vertical"
-    android:gravity="center"
+    tools:context=".ui.events.EventsFragment"
     android:background="#141B27">
 
-    <TextView
-        android:id="@+id/identities"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="50dp"
-        android:textColor="@color/white"/>
+    <ProgressBar
+        android:id="@+id/progress"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/showMyCode"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Show My Code"
+        tools:context=".ui.profile.ProfileFragment"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#141B27"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/button_logout"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="100dp">
 
-    <Button
-        android:id="@+id/button_logout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Logout" />
+        <TextView
+            android:id="@+id/identities"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="50dp"
+            android:textColor="@color/white"/>
 
-</LinearLayout>
+
+        <Button
+            android:id="@+id/createCredential"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Create Credential"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/showMyCode"/>
+
+        <Button
+            android:id="@+id/showMyCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Show My Code"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/button_logout"/>
+
+        <Button
+            android:id="@+id/button_logout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Logout" />
+
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
