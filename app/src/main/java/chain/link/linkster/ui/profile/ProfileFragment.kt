@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import chain.link.linkster.ClientManager
+import chain.link.linkster.CreateProfileRequest
 import chain.link.linkster.CreateUserCredentialRequest
 import chain.link.linkster.CredentialResponse
 import chain.link.linkster.CredentialUserSubject
@@ -67,6 +68,8 @@ class ProfileFragment : Fragment() {
         binding.buttonLogout.setOnClickListener {
             logoutUser()
         }
+
+        binding.createProfile.setOnClickListener { createProfile() }
 
         binding.createCredential.setOnClickListener { createUserCredential() }
 
@@ -125,6 +128,37 @@ class ProfileFragment : Fragment() {
             override fun onFailure(call: Call<List<SchemaResponse>>, t: Throwable) {
                 binding.progress.visibility = View.GONE
                 Toast.makeText(requireContext(), "Error: ${t.message}", Toast.LENGTH_SHORT).show()
+                println("Error: ${t.message}")
+                // Handle the error, such as network issues
+            }
+        })
+    }
+
+    private fun createProfile() {
+        val profileData = CreateProfileRequest(
+            name = "Beff Jezos",
+            wallet = "0x12312312312312123123",
+            profession = "CEO",
+            company = "Amazon",
+            telegram = "beffy"
+        )
+
+        RetrofitClient.instance.createProfile(profileData).enqueue(object : Callback<QRCodeResponse> {
+            override fun onResponse(call: Call<QRCodeResponse>, response: Response<QRCodeResponse>) {
+                if (response.isSuccessful) {
+                    val qrCodeUrl = response.body()?.qrCodeLink
+                    if (qrCodeUrl != null) {
+                        val qrCodeBitmap = generateQRCodeBitmap(qrCodeUrl)
+                        showQRCodeDialog(qrCodeBitmap)
+                    } else {
+                        // Handle the case where the response does not contain a profile ID
+                    }
+                } else {
+                    // Handle failure, possibly logging the error or showing a message
+                }
+            }
+
+            override fun onFailure(call: Call<QRCodeResponse>, t: Throwable) {
                 println("Error: ${t.message}")
                 // Handle the error, such as network issues
             }

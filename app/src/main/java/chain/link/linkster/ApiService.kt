@@ -1,6 +1,7 @@
 package chain.link.linkster
 
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -33,7 +34,37 @@ interface ApiService {
         @Path("credentialId") credentialId: String
     ): Call<QRCodeResponse>
 
+    @POST("/api/v1/create/profile")
+    @Headers("accept: application/json")
+    fun createProfile(
+        @Body request: CreateProfileRequest
+    ): Call<QRCodeResponse>
+
+    @POST("/api/v1/create/event")
+    @Headers("accept: application/json")
+    fun createEvent(
+        @Body request: CreateEventRequest
+    ): Call<QRCodeResponse>
+
 }
+
+data class CreateEventRequest(
+    val event: EventData
+)
+data class EventData(
+    @SerializedName("event-name") val eventName: String,
+    @SerializedName("event-date") val eventDate: String,
+    @SerializedName("event-location") val eventLocation: String,
+    @SerializedName("additional-info") val additionalInfo: String
+)
+
+data class CreateProfileRequest(
+    val name: String,
+    val wallet: String,
+    val profession: String,
+    val company: String,
+    val telegram: String
+)
 
 data class QRCodeResponse(
     val qrCodeLink: String
