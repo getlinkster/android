@@ -25,7 +25,8 @@ class ConversationViewHolder(
 
     fun bind(item: ConnectionsViewModel.MainListItem.ConversationItem) {
         conversation = item.conversation
-        binding.peerAddress.text = item.conversation.peerAddress.truncatedAddress()
+        binding.peerName.text = item.name + ": " + item.conversation.peerAddress.truncatedAddress()
+        binding.peerProfession.text = item.profession
         val messageBody = item.mostRecentMessage?.body.orEmpty()
         val isMe = item.mostRecentMessage?.senderAddress == ClientManager.client.address
         if (messageBody.isNotBlank()) {

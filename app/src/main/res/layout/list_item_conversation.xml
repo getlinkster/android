@@ -6,7 +6,7 @@
     android:background="?attr/selectableItemBackground">
 
     <TextView
-        android:id="@+id/peerAddress"
+        android:id="@+id/peerName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/padding"
@@ -16,6 +16,29 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/peerProfession"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/padding"
+        android:paddingEnd="@dimen/padding"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/peerName" />
+
+    <TextView
+        android:id="@+id/peerAddress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/padding"
+        android:paddingEnd="@dimen/padding"
+        android:visibility="gone"
+        android:textColor="@color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/peerProfession" />
 
     <TextView
         android:id="@+id/messageBody"

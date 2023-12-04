@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonObject
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.xmtp.android.library.Conversation
@@ -249,9 +250,27 @@ class ConnectionsViewModel : ViewModel() {
                 listItems.addAll(
                     conversations.map { conversation ->
                         val lastMessage = fetchMostRecentMessage(conversation)
+
+                        var conversationName = ""
+                        var conversationProfession = ""
+                        claimsLiveData.value?.forEach { claim ->
+                            val credentialSubject = claim.info["credentialSubject"] as? JsonObject
+                            if (credentialSubject != null) {
+                                val wallet = credentialSubject["wallet"].toString().trim().replace("\"", "")
+                                val name = credentialSubject["name"].toString().trim().replace("\"", "")
+                                val profession = credentialSubject["profession"].toString().trim().replace("\"", "")
+                                if (conversation.peerAddress.equals(wallet)) {
+                                    conversationName = name
+                                    conversationProfession = profession
+                                }
+                            }
+                        }
+
                         MainListItem.ConversationItem(
                             id = conversation.topic,
                             conversation,
+                            conversationName,
+                            conversationProfession,
                             lastMessage
                         )
                     }
@@ -288,7 +307,23 @@ class ConnectionsViewModel : ViewModel() {
                     .distinctUntilChanged()
                     .mapLatest { conversation ->
                         val lastMessage = fetchMostRecentMessage(conversation)
-                        MainListItem.ConversationItem(conversation.topic, conversation, lastMessage)
+
+                        var conversationName = ""
+                        var conversationProfession = ""
+                        claimsLiveData.value?.forEach { claim ->
+                            val credentialSubject = claim.info["credentialSubject"] as? JsonObject
+                            if (credentialSubject != null) {
+                                val wallet = credentialSubject["wallet"].toString().trim().replace("\"", "")
+                                val name = credentialSubject["name"].toString().trim().replace("\"", "")
+                                val profession = credentialSubject["name"].toString().trim().replace("\"", "")
+                                if (conversation.peerAddress.equals(wallet)) {
+                                    conversationName = name
+                                    conversationProfession = profession
+                                }
+                            }
+                        }
+
+                        MainListItem.ConversationItem(conversation.topic, conversation, conversationName, conversationProfession, lastMessage)
                     }
                     .catch { emptyFlow<MainListItem>() }
             } else {
@@ -311,6 +346,8 @@ class ConnectionsViewModel : ViewModel() {
         data class ConversationItem(
             override val id: String,
             val conversation: Conversation,
+            val name: String,
+            val profession: String,
             val mostRecentMessage: DecodedMessage?,
         ) : MainListItem(id, ITEM_TYPE_CONVERSATION)
 

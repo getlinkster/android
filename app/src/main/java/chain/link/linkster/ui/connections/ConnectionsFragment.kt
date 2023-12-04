@@ -188,6 +188,7 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
         }
 
         requireActivity().addMenuProvider(menuProvider, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        fetchClaims()
     }
 
     private fun showQRCodeDialog(qrCodeBitmap: Bitmap) {
@@ -221,10 +222,12 @@ class ConnectionsFragment : Fragment(), ConversationsClickListener {
                 when (requestCode) {
 
                     AUTHENTICATE_REQUEST_CODE -> {
+                        binding.progress.visibility = View.VISIBLE
                         viewModel.authenticate(requireContext(), scanResult ?: "")
                     }
 
                     FETCH_CREDENTIAL_REQUEST_CODE -> {
+                        binding.progress.visibility = View.VISIBLE
                         viewModel.fetch(requireContext(), scanResult ?: "")
                     }
                 }

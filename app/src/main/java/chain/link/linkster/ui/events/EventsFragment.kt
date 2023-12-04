@@ -29,6 +29,8 @@ import chain.link.linkster.ui.onboarding.DIDCreationActivity
 import chain.link.linkster.ui.onboarding.DIDCreationViewModel
 import chain.link.linkster.ui.onboarding.QRCodeScannerActivity
 import kotlinx.serialization.json.JsonObject
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class EventsFragment : Fragment() {
 
@@ -236,13 +238,37 @@ class EventsFragment : Fragment() {
             val eventLocationTextView = view.findViewById<TextView>(R.id.event_location)
             val additionalInfoTextView = view.findViewById<TextView>(R.id.additional_info)
 
-            eventNameTextView.text = "Event Name: ${claimData?.eventName}"
-            eventDateTextView.text = "Event Date: ${claimData?.eventDate}"
+            eventNameTextView.text = claimData?.eventName
+            eventDateTextView.text = "Event Date: ${formatDateToFriendlyVersion(claimData?.eventDate)}"
             eventLocationTextView.text = "Event Location: ${claimData?.eventLocation}"
             additionalInfoTextView.text = "Additional Info: ${claimData?.additionalInfo}"
 
             return view
         }
+
+        private fun formatDateToFriendlyVersion(dateStr: String?): String? {
+            try {
+                // Define the input date format
+                val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
+
+                // Parse the input date string
+                val date = inputFormat.parse(dateStr)
+
+                // Define the desired output date format
+                val outputFormat = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.getDefault())
+
+                // Format the date into a friendlier version
+                return outputFormat.format(date)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Return the original string if there's an error
+            return dateStr
+        }
+
     }
+
+
 }
 
